@@ -25,3 +25,4 @@ urlpatterns = [
         name='redoc'
     ),
 ]
+# Это тест коммит
