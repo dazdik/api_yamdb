@@ -25,4 +25,4 @@ urlpatterns = [
         name='redoc'
     ),
 ]
-# Обнулил все коммиты
+
