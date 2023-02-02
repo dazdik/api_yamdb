@@ -1,9 +1,9 @@
 from django.db import models
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=64)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField(unique=False, max_length=50)
 
     def __str__(self):
         return f'{self.name} {self.slug}'
@@ -18,11 +18,10 @@ class Category(models.Model):
         return f'{self.name} {self.slug}'
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     description = models.TextField()
-    rating = models.IntegerField()
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -31,17 +30,20 @@ class Titles(models.Model):
         null=True
     )
     genre = models.ManyToManyField(
-        Genres,
+        Genre,
         through='GenresTitle'
     )
+
+    def __str__(self):
+        return f'{self.name}'
 
     class Meta:
         ordering = ['id']
 
 
 class GenresTitle(models.Model):
-    genres = models.ForeignKey(Genres, on_delete=models.CASCADE)
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    genres = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.genres} {self.title}'

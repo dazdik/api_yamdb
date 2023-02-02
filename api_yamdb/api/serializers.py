@@ -1,6 +1,8 @@
+from pprint import pprint
+
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from .models import Titles, Category, Genres, GenresTitle
+from .models import Title, Category, Genre, GenresTitle
 from django.forms.models import model_to_dict
 
 
@@ -8,8 +10,16 @@ class GenresSerializer(serializers.ModelSerializer):
     # name = serializers.StringRelatedField(read_only=True)
 
     class Meta:
-        model = Genres
+        model = Genre
         fields = '__all__'
+
+
+class GenresPostSerializer(serializers.ModelSerializer):
+    # name = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Genre
+        fields = ('slug',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,10 +37,10 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug'
     )
 
-    #genre = GenresSerializer(many=True)
+    genre = GenresPostSerializer(many=True)
 
     class Meta:
-        model = Titles
+        model = Title
         fields = "__all__"
 
     def to_representation(self, instance):
@@ -45,16 +55,21 @@ class TitleSerializer(serializers.ModelSerializer):
         ret['category'] = cat
         return ret
 
-    # def create(self, validated_data):
-    #     if 'genre' not in self.initial_data:
-    #         title = Title.objects.create(**validated_data)
-    #         return title
-    #     else:
-    #         genres = validated_data.pop('genre')
-    #         title = Title.objects.create(**validated_data)
-    #         for genre in genres:
-    #             current_genre, status = Genres.objects.get_or_create(
-    #                 **genre)
-    #             GenresTitle.objects.create(
-    #                 genre=current_genre, title=title)
-    #         return title
+    def to_internal_value(self, data):
+        print(data['genre'])
+        print(type(data['genre']))
+        return data
+
+    def create(self, validated_data):
+        if 'genre' not in self.initial_data:
+            title = Title.objects.create(**validated_data)
+            return title
+        else:
+            genres = validated_data.pop('genre')
+            title = Title.objects.create(**validated_data)
+            for genre in genres:
+                current_genre, status = Genre.objects.get_or_create(
+                    **genre)
+                GenresTitle.objects.create(
+                    genres=current_genre, title=title)
+            return title

@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets
 
-from .models import Category, Genres, Titles
+from .models import Category, Genre, Title
 from .serializers import TitleSerializer, CategorySerializer, GenresSerializer
 from rest_framework.pagination import PageNumberPagination
 
@@ -15,7 +15,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     """
     Класс для работы с Post url запросами и передачей данных в PostSerializer
     """
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
     def perform_create(self, serializer):
@@ -36,5 +36,5 @@ class GenresViewSet(viewsets.ModelViewSet):
     """
     Класс для работы с Post url запросами и передачей данных в PostSerializer
     """
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenresSerializer
