@@ -1,10 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import TitlesViewSet, CategoryViewSet, GenresViewSet
+from .views import TitleViewSet, CategoryViewSet, GenresViewSet
 
 router = DefaultRouter()
-router.register('titles', TitlesViewSet)
+router.register('titles', TitleViewSet)
 router.register('category', CategoryViewSet)
 router.register('genres', GenresViewSet)
 urlpatterns = [
