@@ -1,15 +1,15 @@
 from rest_framework import serializers
 
 from reviews.models import Review, Comment
-#from api.models import Titles
-from reviews.models import Titles
+
+# from api.models import Title
 
 
-class TitleSerializer(serializers.ModelSerializer):
+# class TitleSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model = Titles
-        fields = '__all__'
+#     class Meta:
+#         model = Title
+#         fields = '__all__'
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(

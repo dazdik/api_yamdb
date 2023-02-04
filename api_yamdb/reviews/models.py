@@ -2,23 +2,23 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-# from api.models import Title
+from api.models import Title
 
 User = get_user_model()
 
 CROP_LEN_TEXT = 30
 
 
-class Titles(models.Model):
-    name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    description = models.TextField()
-    rating = models.IntegerField()
-    category = models.CharField(max_length=256)
-    genre = models.CharField(max_length=256)
+# class Titles(models.Model):
+#     name = models.CharField(max_length=256)
+#     year = models.IntegerField()
+#     description = models.TextField()
+#     rating = models.IntegerField()
+#     category = models.CharField(max_length=256)
+#     genre = models.CharField(max_length=256)
 
-    def __str__(self):
-        return self.name[:CROP_LEN_TEXT]
+#     def __str__(self):
+#         return self.name[:CROP_LEN_TEXT]
 
 class Review(models.Model):
     text = models.TextField()
@@ -27,7 +27,6 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews',
     )
-    # author = models.CharField(max_length=256)
     score = models.IntegerField(validators=[
         MinValueValidator(1),
         MaxValueValidator(10),
@@ -36,9 +35,9 @@ class Review(models.Model):
         'Дата публикации',
         auto_now_add=True,
     )
-    #title = models.CharField(max_length=128)
+    title = models.CharField(max_length=128)
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews',
     )
