@@ -1,5 +1,7 @@
+import re
+
 from rest_framework import serializers
-from .models import Title, Category, Genre
+
 
 
 class GenresSerializer(serializers.ModelSerializer):
