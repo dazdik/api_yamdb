@@ -95,4 +95,4 @@ class Command(BaseCommand):
         self.fill_titles()
         self.fill_genre_title()
         # self.fill_comments()
-        self.fill_review()
+        #self.fill_review()
