@@ -5,7 +5,7 @@ from django.db import models
 
 CUT_TEXT = 15
 
-
+#123
 class User(AbstractUser):
     """
     Кастомная модель.
