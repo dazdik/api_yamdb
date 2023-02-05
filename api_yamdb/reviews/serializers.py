@@ -2,14 +2,6 @@ from rest_framework import serializers
 
 from reviews.models import Review, Comment
 
-# from api.models import Title
-
-
-# class TitleSerializer(serializers.ModelSerializer):
-    
-#     class Meta:
-#         model = Title
-#         fields = '__all__'
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -21,6 +13,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date',)
+
+
+class ReviewSerializeCreaate(ReviewSerializer):
 
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')

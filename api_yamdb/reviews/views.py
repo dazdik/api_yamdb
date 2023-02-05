@@ -6,7 +6,7 @@ from rest_framework.viewsets import ModelViewSet
 from api.models import Title
 from reviews.models import Review
 from reviews.permissions import OwnerOrModeratorOrAdmin
-from reviews.serializers import ReviewSerializer, CommentSerializer
+from reviews.serializers import ReviewSerializer, ReviewSerializeCreaate, CommentSerializer
 
 
 class ReviewViewSet(ModelViewSet):
@@ -20,6 +20,11 @@ class ReviewViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.get_title().reviews.all()
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ReviewSerializeCreaate
+        return ReviewSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
@@ -46,9 +51,3 @@ class CommentViewSet(ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
-
-
-# class TitleViewSet(ModelViewSet):
-#     serializer_class = TitleSerializer
-#     queryset = Title.objects.all()
-#     permission_classes = (IsAuthenticatedOrReadOnly,)

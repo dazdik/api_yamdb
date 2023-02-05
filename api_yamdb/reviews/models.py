@@ -9,17 +9,6 @@ User = get_user_model()
 CROP_LEN_TEXT = 30
 
 
-# class Titles(models.Model):
-#     name = models.CharField(max_length=256)
-#     year = models.IntegerField()
-#     description = models.TextField()
-#     rating = models.IntegerField()
-#     category = models.CharField(max_length=256)
-#     genre = models.CharField(max_length=256)
-
-#     def __str__(self):
-#         return self.name[:CROP_LEN_TEXT]
-
 class Review(models.Model):
     text = models.TextField()
     author = models.ForeignKey(
