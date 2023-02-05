@@ -1,40 +1,65 @@
-from django.shortcuts import render, get_object_or_404
-from rest_framework import viewsets
-
+import django_filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, mixins, filters
 from .models import Category, Genre, Title
-from .serializers import TitleSerializer, CategorySerializer, GenresSerializer
+from .serializers import (
+    TitleSerializerCreate,
+    CategorySerializer,
+    GenresSerializer,
+    TitleSerializerRead
+)
 from rest_framework.pagination import PageNumberPagination
 
 
-# from django_filters.rest_framework import DjangoFilterBackend
+class CreateDestroyViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
 
 
-#
-# Create your views here.
-class TitlesViewSet(viewsets.ModelViewSet):
-    """
-    Класс для работы с Post url запросами и передачей данных в PostSerializer
-    """
-    queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+class TitleFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(
+        field_name='name', lookup_expr='icontains'
+    )
+    year = django_filters.NumberFilter(field_name='year')
+    genre = django_filters.CharFilter(field_name='genre__slug')
+    category = django_filters.CharFilter(field_name='category__slug')
 
-    def perform_create(self, serializer):
-        category_type = self.request.data.get('category')
-        category = get_object_or_404(Category, slug=category_type)
-        return serializer.save(category=category)
+    class Meta:
+        model = Title
+        fields = ['name', 'year', 'genre', 'category']
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    """
-    Класс для работы с Post url запросами и передачей данных в PostSerializer
-    """
-    queryset = Category.objects.all()
+class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с произведениями."""
+    queryset = Title.objects.all().order_by('name')
+    serializer_class = TitleSerializerCreate
+    pagination_class = PageNumberPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH', 'DELETE',):
+            return TitleSerializerCreate
+        return TitleSerializerRead
+
+
+class CategoryViewSet(CreateDestroyViewSet):
+    """Вьюсет для работы с категориями."""
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    lookup_field = 'slug'
 
 
-class GenresViewSet(viewsets.ModelViewSet):
-    """
-    Класс для работы с Post url запросами и передачей данных в PostSerializer
-    """
-    queryset = Genre.objects.all()
+class GenreViewSet(CreateDestroyViewSet):
+    """Вьюсет для работы с жанрами."""
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenresSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    lookup_field = 'slug'
