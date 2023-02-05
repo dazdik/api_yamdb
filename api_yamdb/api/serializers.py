@@ -36,7 +36,7 @@ class TitleSerializerCreate(serializers.ModelSerializer):
         slug_field='slug',
         many=True
     )
-    name = serializers.CharField(max_length=254)
+    name = serializers.CharField(max_length=256)
 
     class Meta:
         model = Title
