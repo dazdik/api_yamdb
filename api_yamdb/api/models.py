@@ -49,7 +49,9 @@ class Title(models.Model):
     name = models.CharField(
         max_length=256,
     )
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(
+        null=True,
+        blank=True)
     year = models.PositiveSmallIntegerField(
     )
     category = models.ForeignKey(

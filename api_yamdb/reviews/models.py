@@ -24,7 +24,6 @@ class Review(models.Model):
         'Дата публикации',
         auto_now_add=True,
     )
-    title = models.CharField(max_length=128)
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
