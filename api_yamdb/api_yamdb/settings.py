@@ -1,14 +1,9 @@
-import os
-
-from datetime import timedelta
-from dotenv import load_dotenv
-
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv()
-SECRET_KEY = os.getenv('SECRET_KEY', default='xvlkr(1t0ouu6_0f@i61w&5o*g+3=2%c55f2=e7yu8w1%ch06o')
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -24,12 +19,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'django_filters',
-    'rest_framework_simplejwt',
+
     'api.apps.ApiConfig',
     'reviews.apps.ReviewsConfig',
-    'users.apps.UsersConfig',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -41,7 +34,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 4,
+}
 ROOT_URLCONF = 'api_yamdb.urls'
 
 TEMPLATES_DIR = BASE_DIR / 'templates'
@@ -101,30 +97,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-AUTH_USER_MODEL = 'users.User'
+# Static files (CSS, JavaScript, Images)
 
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 5
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
-
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
-DEFAULT_FROM_EMAIL = 'from@yamdb.ru'
