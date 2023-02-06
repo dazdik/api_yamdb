@@ -13,7 +13,7 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Title, Genre, Category
+from reviews.models import Title, Genre, Category
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 from .serializers import (
@@ -78,6 +78,7 @@ class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами."""
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenresSerializer
+
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     lookup_field = 'slug'
@@ -124,8 +125,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if (
-            self.request.user.is_authenticated and (
-            self.request.user.is_admin or self.request.user.is_superuser)):
+            self.request.user.is_authenticated and
+            (self.request.user.is_admin or
+             self.request.user.is_superuser)
+        ):
             return UserSerializer
         return UserRoleSerializer
 

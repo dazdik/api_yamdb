@@ -2,7 +2,7 @@ import re
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from .models import Title, Genre, Category
+from reviews.models import Title, Genre, Category
 from users.models import User
 
 

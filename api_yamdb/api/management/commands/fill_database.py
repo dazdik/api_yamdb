@@ -4,7 +4,7 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from api.models import Category, Genre, Title, GenreToTitle
+from reviews.models import Category, Genre, Title, GenreToTitle
 from reviews.models import Comment, Review
 
 
@@ -94,5 +94,4 @@ class Command(BaseCommand):
         self.fill_genre()
         self.fill_titles()
         self.fill_genre_title()
-        # self.fill_comments()
-        #self.fill_review()
+
