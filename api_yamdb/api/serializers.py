@@ -8,6 +8,8 @@ from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для кастомной модели пользователя."""
+
     class Meta:
         model = User
         fields = (
@@ -37,6 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRoleSerializer(UserSerializer):
+    """Сериализатор для изменения профиля."""
     class Meta:
         model = User
         fields = (
@@ -51,6 +54,8 @@ class UserRoleSerializer(UserSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения кода подтверждения."""
+
     class Meta:
         model = User
         fields = ('email', 'username')
@@ -66,6 +71,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class GetTokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена."""
+
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -80,18 +87,24 @@ class GetTokenSerializer(serializers.Serializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор модели произведений."""
+
     class Meta:
         fields = '__all__'
         model = Title
 
 
 class GenresSerializer(serializers.ModelSerializer):
+    """Сериализатор для жанров."""
+
     class Meta:
         model = Genre
         fields = ('name', 'slug')
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор для категорий."""
+
     class Meta:
         model = Category
         fields = ('name', 'slug')
@@ -99,6 +112,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializerRead(serializers.ModelSerializer):
     """Сериализатор для работы с произведениями при чтении."""
+
     category = CategorySerializer(read_only=True)
     genre = GenresSerializer(many=True, read_only=True)
     rating = serializers.SerializerMethodField()
@@ -115,6 +129,7 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
 class TitleSerializerCreate(serializers.ModelSerializer):
     """Сериализатор для работы с произведениями при создании."""
+
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug'

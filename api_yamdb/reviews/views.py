@@ -2,12 +2,17 @@ from django.shortcuts import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ModelViewSet
+
 from reviews.models import Review, Title
 from reviews.permissions import OwnerOrModeratorOrAdmin
-from reviews.serializers import ReviewSerializer, ReviewSerializeCreaate, CommentSerializer
+from reviews.serializers import (CommentSerializer,
+                                 ReviewSerializer,
+                                 ReviewSerializerCreate)
 
 
 class ReviewViewSet(ModelViewSet):
+    """Просмотр и редактирование отзывов."""
+
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
     pagination_class = LimitOffsetPagination
@@ -18,20 +23,22 @@ class ReviewViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.get_title().reviews.all()
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
-            return ReviewSerializeCreaate
+            return ReviewSerializerCreate
         return ReviewSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
-    
+
     def perform_update(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
 
 
 class CommentViewSet(ModelViewSet):
+    """Просмотр и редактирование комментариев."""
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
     pagination_class = LimitOffsetPagination
@@ -43,9 +50,9 @@ class CommentViewSet(ModelViewSet):
             title__id=self.kwargs.get('title_id')
         )
         return review
-    
+
     def get_queryset(self):
         return self.get_review().comments.all()
-    
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())

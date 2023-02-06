@@ -9,6 +9,7 @@ CROP_LEN_TEXT = 30
 
 class Genre(models.Model):
     """Модель для работы с жанрами"""
+
     name = models.CharField(
         max_length=256,
         verbose_name='Название жанра'
@@ -29,7 +30,8 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    """Модель для работы с категориями"""
+    """Модель для работы с категориями."""
+
     name = models.CharField(
         max_length=256,
         default='--Пусто--',
@@ -51,7 +53,8 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    """Модель для работы с произведениями"""
+    """Модель для работы с произведениями."""
+
     name = models.CharField(
         max_length=256,
     )
@@ -82,7 +85,8 @@ class Title(models.Model):
 
 
 class GenreToTitle(models.Model):
-    """Модель связывающая произведение с жанром"""
+    """Модель, связывающая произведение с жанром."""
+
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
@@ -91,6 +95,8 @@ class GenreToTitle(models.Model):
 
 
 class Review(models.Model):
+    """Модель отзывов к произведениям."""
+
     text = models.TextField()
     author = models.ForeignKey(
         User,
@@ -124,6 +130,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель комментариев к отзывам."""
+
     text = models.TextField()
     author = models.ForeignKey(
         User,
