@@ -16,19 +16,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Title, Genre, Category
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
-from .serializers import (
-    GetTokenSerializer,
-    SignUpSerializer,
-    TitleSerializer,
-    UserSerializer,
-    UserRoleSerializer, GenresSerializer, CategorySerializer,
-    TitleSerializerRead, TitleSerializerCreate
-)
+from .serializers import (CategorySerializer, GenresSerializer,
+                          GetTokenSerializer, SignUpSerializer,
+                          TitleSerializer, TitleSerializerCreate,
+                          TitleSerializerRead, UserSerializer,
+                          UserRoleSerializer)
+
 from users.models import User
 
 
-#
-# Create your views here.
 class CreateDestroyViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -53,6 +49,7 @@ class TitleFilter(django_filters.FilterSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями."""
+
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
     permission_classes = (IsAdminOrReadOnly,)
@@ -68,6 +65,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями."""
+
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
@@ -78,6 +76,7 @@ class CategoryViewSet(CreateDestroyViewSet):
 
 class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами."""
+
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenresSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -87,6 +86,12 @@ class GenreViewSet(CreateDestroyViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет для работы с пользователями.
+    Администратор имеет полные права доступа.
+    Пользователь может просматривать и редактировать свой аккаунт.
+    """
+
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
@@ -95,7 +100,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     pagination_class = PageNumberPagination
 
-    # запрет на POST
+    # запрет на PUT
     http_method_names = ['get', 'post', 'head', 'patch', 'delete']
 
     @action(
@@ -126,11 +131,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_serializer_class(self):
-        if (
-            self.request.user.is_authenticated and
-            (self.request.user.is_admin or
-             self.request.user.is_superuser)
-        ):
+        if (self.request.user.is_authenticated and (
+                self.request.user.is_admin
+                or self.request.user.is_superuser)):
             return UserSerializer
         return UserRoleSerializer
 
@@ -138,6 +141,11 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(('POST',))
 @permission_classes((AllowAny,))
 def signup(request):
+    """
+    Вью-функция регистрации нового пользователя.
+    Отправка кода подтверждения на почту.
+    """
+
     serializer = SignUpSerializer(data=request.data)
     if User.objects.filter(username=request.data.get('username'),
                            email=request.data.get('email')).exists():
@@ -160,6 +168,8 @@ def signup(request):
 @api_view(('POST',))
 @permission_classes((AllowAny,))
 def get_token(request):
+    """Получение токена для авторизации."""
+
     serializer = GetTokenSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(

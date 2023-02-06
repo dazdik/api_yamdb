@@ -28,9 +28,6 @@ class IsAdminModeratorOwnerOrReadOnly(IsAuthenticatedOrReadOnly):
         return (
             request.method in SAFE_METHODS
             or (not request.user.is_anonymous and (
-            request.user.is_admin
-            or request.user.is_moderator
-            or obj.author == request.user))
+                request.user.is_admin or request.user.is_moderator
+                or obj.author == request.user))
         )
-
-
