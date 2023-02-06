@@ -127,3 +127,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 DEFAULT_FROM_EMAIL = 'from@yamdb.ru'
 AUTH_USER_MODEL = 'users.User'
+
+
+FIXTURE_DIRS = [f'{Path(__file__).resolve().parent.parent.parent}\\tests\\fixtures\\fixture_user.py']

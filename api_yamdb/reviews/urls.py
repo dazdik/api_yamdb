@@ -18,7 +18,5 @@ router_v1.register(
 # router_v1.register(r'title', TitleViewSet, basename='Title')
 
 urlpatterns = [
-    path('auth/', include('djoser.urls')), # just for debug, delete before prod review
-    path('auth/', include('djoser.urls.jwt')), # just for debug, delete before prod review
     path('', include(router_v1.urls))
 ]
