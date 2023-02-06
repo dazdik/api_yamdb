@@ -55,6 +55,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями."""
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -70,6 +71,7 @@ class CategoryViewSet(CreateDestroyViewSet):
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
+    permission_classes = (IsAdminOrReadOnly,)
     search_fields = ['name']
     lookup_field = 'slug'
 
@@ -78,7 +80,7 @@ class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами."""
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenresSerializer
-
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     lookup_field = 'slug'
