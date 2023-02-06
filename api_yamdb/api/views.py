@@ -3,7 +3,7 @@ import uuid
 import django_filters
 from django.conf import settings
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets, mixins
 from rest_framework.decorators import action, api_view, permission_classes
@@ -13,14 +13,15 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Title, Genre, Category
-from .permissions import (IsAdmin, IsAdminOrReadOnly,
-                          IsAdminModeratorOwnerOrReadOnly)
-from .serializers import (CategorySerializer, GenresSerializer,
-                          GetTokenSerializer, SignUpSerializer,
-                          TitleSerializer, TitleSerializerCreate,
-                          TitleSerializerRead, UserSerializer,
-                          UserRoleSerializer)
+from reviews.models import Category, Genre, Review, Title
+from api.permissions import (IsAdmin, IsAdminOrReadOnly,
+                             OwnerOrModeratorOrAdmin)
+from api.serializers import (CategorySerializer, GenresSerializer,
+                             GetTokenSerializer, SignUpSerializer,
+                             TitleSerializerCreate,
+                             TitleSerializerRead, UserSerializer,
+                             UserRoleSerializer, CommentSerializer,
+                             ReviewSerializer, ReviewSerializerCreate)
 
 from users.models import User
 
@@ -189,3 +190,51 @@ def get_token(request):
     data = {'token': str(refresh.access_token)}
 
     return Response(data, status=status.HTTP_200_OK)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Просмотр и редактирование отзывов."""
+
+    # serializer_class = ReviewSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
+    pagination_class = PageNumberPagination
+
+    def get_title(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ReviewSerializerCreate
+        return ReviewSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, title=self.get_title())
+
+    def perform_update(self, serializer):
+        serializer.save(title=self.get_title())
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Просмотр и редактирование комментариев."""
+
+    serializer_class = CommentSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
+    pagination_class = PageNumberPagination
+
+    def get_review(self):
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
+        )
+        return review
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.get_review())
