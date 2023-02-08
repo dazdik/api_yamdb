@@ -5,19 +5,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly
-)
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
-from api.v1.permissions import (
-    IsAdmin, IsAdminOrReadOnly,
+from api.v1.permissions import IsAdminOrReadOnly, IsAdmin, \
     OwnerOrModeratorOrAdmin
-)
 from api.v1 import serializers
 from api.v1.mixins import CreateDestroyViewSet
 from api.v1.filters import TitleFilter
@@ -85,7 +79,7 @@ class UserViewSet(viewsets.ModelViewSet):
         detail=False,
         url_path='me',
         methods=('GET', 'PATCH',),
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(permissions.IsAuthenticated,),
 
     )
     def me(self, request):
@@ -106,19 +100,15 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def get_serializer_class(self):
-        if (
-            self.request.user.is_authenticated
-            and (
-                self.request.user.is_admin
-                or self.request.user.is_superuser
-            )
+        if self.request.user.is_authenticated and (
+            self.request.user.is_admin or self.request.user.is_superuser
         ):
             return serializers.UserSerializer
         return serializers.UserRoleSerializer
 
 
 @api_view(('POST',))
-@permission_classes((AllowAny,))
+@permission_classes((permissions.AllowAny,))
 def signup(request):
     """
     Вью-функция регистрации нового пользователя.
@@ -142,7 +132,7 @@ def signup(request):
 
 
 @api_view(('POST',))
-@permission_classes((AllowAny,))
+@permission_classes((permissions.AllowAny,))
 def get_token(request):
     """Получение токена для авторизации."""
 
@@ -165,7 +155,10 @@ def get_token(request):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование отзывов."""
-    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        OwnerOrModeratorOrAdmin
+    )
     pagination_class = PageNumberPagination
 
     def get_title(self):
@@ -191,7 +184,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование комментариев."""
 
     serializer_class = serializers.CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        OwnerOrModeratorOrAdmin
+    )
     pagination_class = PageNumberPagination
 
     def get_review(self):
