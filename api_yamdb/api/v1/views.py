@@ -100,11 +100,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if (
-            self.request.user.is_authenticated
-            and (
-            self.request.user.is_admin
-            or self.request.user.is_superuser
-        )
+            self.request.user.is_authenticated and
+            (
+                self.request.user.is_admin or self.request.user.is_superuser
+            )
         ):
             return serializers.UserSerializer
         return serializers.UserRoleSerializer
