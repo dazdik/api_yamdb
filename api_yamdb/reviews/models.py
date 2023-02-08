@@ -98,16 +98,20 @@ class GenreToTitle(models.Model):
 class Review(models.Model):
     """Модель отзывов к произведениям."""
 
-    text = models.TextField()
+    text = models.TextField('Текст')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='reviews',
+        verbose_name='Автор'
     )
-    score = models.IntegerField(validators=[
-        MinValueValidator(1),
-        MaxValueValidator(10),
-    ])
+    score = models.IntegerField(
+        'Оценка',
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10),
+        ]
+    )
     pub_date = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True,
@@ -116,9 +120,13 @@ class Review(models.Model):
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
+        verbose_name='Произведение'
     )
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        indexes = [models.Index(fields=['-pub_date'])]
         ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
@@ -134,16 +142,18 @@ class Review(models.Model):
 class Comment(models.Model):
     """Модель комментариев к отзывам."""
 
-    text = models.TextField()
+    text = models.TextField('Текст')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments',
+        verbose_name='Автор'
     )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
+        verbose_name='Отзыв'
     )
     pub_date = models.DateTimeField(
         'Дата публикации',
@@ -151,6 +161,9 @@ class Comment(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Комментарий к отзывам'
+        verbose_name_plural = 'Комментарии к отзывам'
+        indexes = [models.Index(fields=['-pub_date'])]
         ordering = ('-pub_date',)
 
     def __str__(self):
