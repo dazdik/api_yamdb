@@ -1,74 +1,53 @@
 import uuid
 
-import django_filters
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets, mixins
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
-from api.permissions import (IsAdmin, IsAdminOrReadOnly,
-                             OwnerOrModeratorOrAdmin)
-from api.serializers import (CategorySerializer, GenresSerializer,
-                             GetTokenSerializer, SignUpSerializer,
-                             TitleSerializerCreate,
-                             TitleSerializerRead, UserSerializer,
-                             UserRoleSerializer, CommentSerializer,
-                             ReviewSerializer, ReviewSerializerCreate)
-
+from api.v1.permissions import (
+    IsAdmin, IsAdminOrReadOnly,
+    OwnerOrModeratorOrAdmin
+)
+from api.v1 import serializers
+from api.v1.mixins import CreateDestroyViewSet
+from api.v1.filters import TitleFilter
 from users.models import User
-
-
-class CreateDestroyViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    pass
-
-
-class TitleFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(
-        field_name='name', lookup_expr='icontains'
-    )
-    year = django_filters.NumberFilter(field_name='year')
-    genre = django_filters.CharFilter(field_name='genre__slug')
-    category = django_filters.CharFilter(field_name='category__slug')
-
-    class Meta:
-        model = Title
-        fields = ['name', 'year', 'genre', 'category']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями."""
-
-    queryset = Title.objects.all().order_by('name')
-    serializer_class = TitleSerializerCreate
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('-rating')
+    serializer_class = serializers.TitleSerializerCreate
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH', 'DELETE',):
-            return TitleSerializerCreate
-        return TitleSerializerRead
+        if self.request.method in ('POST', 'PATCH', 'DELETE'):
+            return serializers.TitleSerializerCreate
+        return serializers.TitleSerializerRead
 
 
 class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями."""
 
-    queryset = Category.objects.all().order_by('name')
-    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+    serializer_class = serializers.CategorySerializer
     filter_backends = [filters.SearchFilter]
     permission_classes = (IsAdminOrReadOnly,)
     search_fields = ['name']
@@ -78,8 +57,8 @@ class CategoryViewSet(CreateDestroyViewSet):
 class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами."""
 
-    queryset = Genre.objects.all().order_by('name')
-    serializer_class = GenresSerializer
+    queryset = Genre.objects.all()
+    serializer_class = serializers.GenresSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
@@ -94,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
 
     queryset = User.objects.all().order_by('id')
-    serializer_class = UserSerializer
+    serializer_class = serializers.UserSerializer
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
@@ -116,7 +95,8 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, username=username)
 
         if request.method == 'PATCH':
-            serializer = UserSerializer(user, data=request.data, partial=True)
+            serializer = serializers.UserSerializer(user, data=request.data,
+                                                    partial=True)
             if not serializer.is_valid():
                 return Response(
                     serializer.errors,
@@ -126,17 +106,21 @@ class UserViewSet(viewsets.ModelViewSet):
                 role=user.role,
                 confirmation_code=user.confirmation_code,
             )
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data)
 
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = serializers.UserSerializer(user)
+        return Response(serializer.data)
 
     def get_serializer_class(self):
-        if (self.request.user.is_authenticated and (
+        if (
+            self.request.user.is_authenticated and
+            (
                 self.request.user.is_admin
-                or self.request.user.is_superuser)):
-            return UserSerializer
-        return UserRoleSerializer
+                or self.request.user.is_superuser
+            )
+        ):
+            return serializers.UserSerializer
+        return serializers.UserRoleSerializer
 
 
 @api_view(('POST',))
@@ -147,10 +131,12 @@ def signup(request):
     Отправка кода подтверждения на почту.
     """
 
-    serializer = SignUpSerializer(data=request.data)
-    if User.objects.filter(username=request.data.get('username'),
-                           email=request.data.get('email')).exists():
-        return Response(request.data, status=status.HTTP_200_OK)
+    serializer = serializers.SignUpSerializer(data=request.data)
+    if User.objects.filter(
+        username=request.data.get('username'),
+        email=request.data.get('email')
+    ).exists():
+        return Response(request.data)
 
     serializer.is_valid(raise_exception=True)
     user, email = User.objects.get_or_create(**serializer.validated_data)
@@ -171,7 +157,7 @@ def signup(request):
 def get_token(request):
     """Получение токена для авторизации."""
 
-    serializer = GetTokenSerializer(data=request.data)
+    serializer = serializers.GetTokenSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
             serializer.errors,
@@ -194,8 +180,6 @@ def get_token(request):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование отзывов."""
-
-    # serializer_class = ReviewSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
     pagination_class = PageNumberPagination
 
@@ -208,8 +192,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return ReviewSerializerCreate
-        return ReviewSerializer
+            return serializers.ReviewSerializerCreate
+        return serializers.ReviewSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
@@ -221,7 +205,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование комментариев."""
 
-    serializer_class = CommentSerializer
+    serializer_class = serializers.CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, OwnerOrModeratorOrAdmin)
     pagination_class = PageNumberPagination
 

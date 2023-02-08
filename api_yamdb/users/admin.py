@@ -4,13 +4,14 @@ from .models import User
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('pk',
-                    'username',
-                    'email',
-                    'bio',
-                    'role',
-                    'confirmation_code',
-                    )
+    list_display = (
+        'pk',
+        'username',
+        'email',
+        'bio',
+        'role',
+        'confirmation_code',
+    )
     list_editable = ('email', 'role',)
     search_fields = ('role', 'username', 'email',)
     list_filter = ('role',)

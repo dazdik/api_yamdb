@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
+from reviews.validators import year_validator
 
 User = get_user_model()
-
 CROP_LEN_TEXT = 30
 
 
@@ -24,6 +24,7 @@ class Genre(models.Model):
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -34,7 +35,6 @@ class Category(models.Model):
 
     name = models.CharField(
         max_length=256,
-        default='--Пусто--',
         verbose_name='Название категории'
     )
     slug = models.SlugField(
@@ -47,6 +47,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -60,9 +61,9 @@ class Title(models.Model):
     )
     description = models.TextField(
         null=True,
-        blank=True)
-    year = models.PositiveSmallIntegerField(
+        blank=True
     )
+    year = models.PositiveSmallIntegerField(validators=[year_validator])
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,

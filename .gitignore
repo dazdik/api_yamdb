@@ -148,3 +148,4 @@ dmypy.json
 # папки со статикой и медиа
 media/
 
+api_yamdb/users/migrations/0002_alter_user_confirmation_code.py
