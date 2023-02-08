@@ -1,6 +1,5 @@
 import re
 
-from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -36,11 +35,26 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'Неверный формат {value}.'
             )
+
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                'Это имя занято, найдите себе другое!'
+            )
+
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Эта почта уже занята, воспользуйтесь входом.'
+            )
+
         return value
 
 
 class UserRoleSerializer(UserSerializer):
     """Сериализатор для изменения профиля."""
+
     class Meta:
         model = User
         fields = (
@@ -70,21 +84,15 @@ class SignUpSerializer(serializers.ModelSerializer):
     def validate_username(self, username):
         return UserSerializer.validate_username(self, username)
 
+    def validate_email(self, email):
+        return UserSerializer.validate_email(self, email)
+
 
 class GetTokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
 
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
-
-    def validate(self, data):
-        username = data.get('username')
-        confirmation_code = data.get('confirmation_code')
-        if username is None:
-            raise serializers.ValidationError('Пользователь не существует')
-        if confirmation_code is None:
-            raise serializers.ValidationError('Код отстутствует')
-        return data
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -116,16 +124,12 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = GenresSerializer(many=True, read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField()
 
     class Meta:
         model = Title
         fields = "__all__"
         read_only_fields = ('id',)
-
-    def get_rating(self, obj):
-        obj = obj.reviews.all().aggregate(rating=Avg('score'))
-        return obj['rating']
 
 
 class TitleSerializerCreate(serializers.ModelSerializer):
@@ -166,12 +170,14 @@ class ReviewSerializerCreate(ReviewSerializer):
 
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')
-        # title = Title.objects.get(pk=title_id)
-        if Review.objects.filter(title=title_id,
-                                 author=self.context['request'].user).exists():
+        if Review.objects.filter(
+            title=title_id,
+            author=self.context['request'].user
+        ).exists():
             raise serializers.ValidationError(
                 "Unique constraint violated:"
-                "You've already left review for this title")
+                "You've already left review for this title"
+            )
         return data
 
 

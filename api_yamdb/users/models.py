@@ -1,12 +1,9 @@
-import uuid
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 CUT_TEXT = 15
 
 
-# 123
 class User(AbstractUser):
     """
     Кастомная модель.
@@ -20,6 +17,12 @@ class User(AbstractUser):
         (USER, 'Пользователь'),
         (MODERATOR, 'Модератор'),
         (ADMIN, 'Администратор'),
+    )
+    username = models.CharField(
+        'Логин',
+        max_length=150,
+        unique=True,
+        blank=False, null=False,
     )
     email = models.EmailField(
         'Электронная почта',
@@ -40,11 +43,11 @@ class User(AbstractUser):
         blank=False,
         null=False,
     )
-
-    confirmation_code = models.UUIDField(
+    confirmation_code = models.CharField(
         'Код подтверждения',
-        default=uuid.uuid4(),
-        editable=False,
+        max_length=30,
+        null=True,
+        blank=True
     )
 
     class Meta:
