@@ -160,7 +160,8 @@ class ReviewSerializerCreate(ReviewSerializer):
         ).exists():
             raise serializers.ValidationError(
                 "Unique constraint violated:"
-                "You've already left review for this title")
+                "You've already left review for this title"
+            )
         return data
 
 
