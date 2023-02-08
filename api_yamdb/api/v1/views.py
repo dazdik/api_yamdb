@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
-from api.v1 import permissions as own_permissions
+from api.v1.permissions import IsAdminOrReadOnly, IsAdmin, \
+    OwnerOrModeratorOrAdmin
 from api.v1 import serializers
 from api.v1.mixins import CreateDestroyViewSet
 from api.v1.filters import TitleFilter
@@ -23,7 +24,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')).order_by('-rating')
     serializer_class = serializers.TitleSerializerCreate
-    permission_classes = (own_permissions.IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -40,7 +41,7 @@ class CategoryViewSet(CreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = serializers.CategorySerializer
     filter_backends = [filters.SearchFilter]
-    permission_classes = (own_permissions.IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     search_fields = ['name']
     lookup_field = 'slug'
 
@@ -50,7 +51,7 @@ class GenreViewSet(CreateDestroyViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = serializers.GenresSerializer
-    permission_classes = (own_permissions.IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     lookup_field = 'slug'
@@ -65,7 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all().order_by('id')
     serializer_class = serializers.UserSerializer
-    permission_classes = (own_permissions.IsAdmin,)
+    permission_classes = (.IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
@@ -156,7 +157,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование отзывов."""
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
-        own_permissions.OwnerOrModeratorOrAdmin
+        OwnerOrModeratorOrAdmin
     )
     pagination_class = PageNumberPagination
 
@@ -185,7 +186,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.CommentSerializer
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
-        own_permissions.OwnerOrModeratorOrAdmin
+        OwnerOrModeratorOrAdmin
     )
     pagination_class = PageNumberPagination
 
