@@ -1,6 +1,5 @@
 import re
 
-from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -36,6 +35,20 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'Неверный формат {value}.'
             )
+
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                'Это имя занято, найдите себе другое!'
+            )
+
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Эта почта уже занята, воспользуйтесь входом.'
+            )
+
         return value
 
 
@@ -70,6 +83,9 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def validate_username(self, username):
         return UserSerializer.validate_username(self, username)
+
+    def validate_email(self, email):
+        return UserSerializer.validate_email(self, email)
 
 
 class GetTokenSerializer(serializers.Serializer):
