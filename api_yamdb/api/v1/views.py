@@ -1,7 +1,4 @@
-import uuid
-
-from django.conf import settings
-from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -24,6 +21,7 @@ from api.v1.permissions import (
 from api.v1 import serializers
 from api.v1.mixins import CreateDestroyViewSet
 from api.v1.filters import TitleFilter
+from api.v1.utils import send_confirmation_code
 from users.models import User
 
 
@@ -97,11 +95,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'PATCH':
             serializer = serializers.UserSerializer(user, data=request.data,
                                                     partial=True)
-            if not serializer.is_valid():
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            serializer.is_valid(raise_exception=True)
             serializer.save(
                 role=user.role,
                 confirmation_code=user.confirmation_code,
@@ -113,8 +107,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if (
-            self.request.user.is_authenticated and
-            (
+            self.request.user.is_authenticated
+            and (
                 self.request.user.is_admin
                 or self.request.user.is_superuser
             )
@@ -140,16 +134,11 @@ def signup(request):
 
     serializer.is_valid(raise_exception=True)
     user, email = User.objects.get_or_create(**serializer.validated_data)
-    confirmation_code = str(uuid.uuid4())
 
-    send_mail(
-        'Регистрация на Yamdb',
-        f'Используйте этот код {confirmation_code} для получения токена',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    confirmation_code = default_token_generator.make_token(user)
+    send_confirmation_code(user.email, confirmation_code)
+
+    return Response(serializer.data)
 
 
 @api_view(('POST',))
@@ -158,16 +147,12 @@ def get_token(request):
     """Получение токена для авторизации."""
 
     serializer = serializers.GetTokenSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    serializer.is_valid(raise_exception=True)
 
     username, confirmation_code = serializer.validated_data.values()
     user = get_object_or_404(User, username=username)
 
-    if confirmation_code != str(user.confirmation_code):
+    if confirmation_code != user.confirmation_code:
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
@@ -175,7 +160,7 @@ def get_token(request):
     refresh = RefreshToken.for_user(user)
     data = {'token': str(refresh.access_token)}
 
-    return Response(data, status=status.HTTP_200_OK)
+    return Response(data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
