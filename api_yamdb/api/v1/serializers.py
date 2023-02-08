@@ -41,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRoleSerializer(UserSerializer):
     """Сериализатор для изменения профиля."""
+
     class Meta:
         model = User
         fields = (
@@ -77,15 +78,6 @@ class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
-    def validate(self, data):
-        username = data.get('username')
-        confirmation_code = data.get('confirmation_code')
-        if username is None:
-            raise serializers.ValidationError('Пользователь не существует')
-        if confirmation_code is None:
-            raise serializers.ValidationError('Код отстутствует')
-        return data
-
 
 class TitleSerializer(serializers.ModelSerializer):
     """Базовый сериализатор модели произведений."""
@@ -116,16 +108,12 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = GenresSerializer(many=True, read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField()
 
     class Meta:
         model = Title
         fields = "__all__"
         read_only_fields = ('id',)
-
-    def get_rating(self, obj):
-        obj = obj.reviews.all().aggregate(rating=Avg('score'))
-        return obj['rating']
 
 
 class TitleSerializerCreate(serializers.ModelSerializer):
@@ -166,9 +154,10 @@ class ReviewSerializerCreate(ReviewSerializer):
 
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')
-        # title = Title.objects.get(pk=title_id)
-        if Review.objects.filter(title=title_id,
-                                 author=self.context['request'].user).exists():
+        if Review.objects.filter(
+            title=title_id,
+            author=self.context['request'].user
+        ).exists():
             raise serializers.ValidationError(
                 "Unique constraint violated:"
                 "You've already left review for this title")
