@@ -87,12 +87,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
     )
     def me(self, request):
-        username = request.user.username
-        user = get_object_or_404(User, username=username)
-
+        user = request.user
         if request.method == 'PATCH':
-            serializer = serializers.UserSerializer(user, data=request.data,
-                                                    partial=True)
+            serializer = serializers.UserSerializer(
+                user,
+                data=request.data,
+                partial=True
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save(
                 role=user.role,
@@ -105,7 +106,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.user.is_authenticated and (
-            self.request.user.is_admin or self.request.user.is_superuser
+            self.request.user.is_admin
+            or self.request.user.is_superuser
         ):
             return serializers.UserSerializer
         return serializers.UserRoleSerializer
@@ -127,7 +129,6 @@ def signup(request):
         return Response(request.data)
 
     serializer.is_valid(raise_exception=True)
-    user, email = User.objects.get_or_create(**serializer.validated_data)
     confirmation_code = default_token_generator.make_token(user)
     send_confirmation_code(user.email, confirmation_code)
 
@@ -142,7 +143,9 @@ def get_token(request):
     serializer = serializers.GetTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    username, confirmation_code = serializer.validated_data.values()
+    # username, confirmation_code = serializer.validated_data.values()
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
     user = get_object_or_404(User, username=username)
 
     if confirmation_code != user.confirmation_code:
