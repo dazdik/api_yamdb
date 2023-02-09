@@ -58,12 +58,18 @@ class Title(models.Model):
 
     name = models.CharField(
         max_length=256,
+        verbose_name='Название произведения'
     )
     description = models.TextField(
         null=True,
-        blank=True
+        blank=True,
+        verbose_name='Описание произведения'
     )
-    year = models.PositiveSmallIntegerField(validators=[year_validator])
+    year = models.PositiveSmallIntegerField(
+        validators=[year_validator],
+        verbose_name='Дата написания'
+
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -75,11 +81,13 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genre,
         through='GenreToTitle',
+        verbose_name='Жанр'
     )
 
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+        indexes = [models.Index(fields=['-year'])]
 
     def __str__(self):
         return self.name

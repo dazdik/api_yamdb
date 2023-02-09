@@ -10,8 +10,11 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
-from api.v1.permissions import IsAdminOrReadOnly, IsAdmin, \
+from api.v1.permissions import (
+    IsAdminOrReadOnly,
+    IsAdmin,
     OwnerOrModeratorOrAdmin
+)
 from api.v1 import serializers
 from api.v1.mixins import CreateDestroyViewSet
 from api.v1.filters import TitleFilter
@@ -22,7 +25,8 @@ from users.models import User
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями."""
     queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')).order_by('-rating')
+        rating=Avg('reviews__score')
+    ).order_by('-rating')
     serializer_class = serializers.TitleSerializerCreate
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -83,12 +87,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
     )
     def me(self, request):
-        username = request.user.username
-        user = get_object_or_404(User, username=username)
-
+        user = request.user
         if request.method == 'PATCH':
-            serializer = serializers.UserSerializer(user, data=request.data,
-                                                    partial=True)
+            serializer = serializers.UserSerializer(
+                user,
+                data=request.data,
+                partial=True
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save(
                 role=user.role,
@@ -101,7 +106,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.user.is_authenticated and (
-            self.request.user.is_admin or self.request.user.is_superuser
+            self.request.user.is_admin
+            or self.request.user.is_superuser
         ):
             return serializers.UserSerializer
         return serializers.UserRoleSerializer
@@ -123,8 +129,6 @@ def signup(request):
         return Response(request.data)
 
     serializer.is_valid(raise_exception=True)
-    user, email = User.objects.get_or_create(**serializer.validated_data)
-
     confirmation_code = default_token_generator.make_token(user)
     send_confirmation_code(user.email, confirmation_code)
 
@@ -139,7 +143,9 @@ def get_token(request):
     serializer = serializers.GetTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    username, confirmation_code = serializer.validated_data.values()
+    # username, confirmation_code = serializer.validated_data.values()
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
     user = get_object_or_404(User, username=username)
 
     if confirmation_code != user.confirmation_code:
@@ -162,8 +168,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     def get_title(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        return title
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_title().reviews.all()
