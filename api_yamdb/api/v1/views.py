@@ -10,8 +10,11 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title
-from api.v1.permissions import IsAdminOrReadOnly, IsAdmin, \
+from api.v1.permissions import (
+    IsAdminOrReadOnly,
+    IsAdmin,
     OwnerOrModeratorOrAdmin
+)
 from api.v1 import serializers
 from api.v1.mixins import CreateDestroyViewSet
 from api.v1.filters import TitleFilter
@@ -22,7 +25,8 @@ from users.models import User
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями."""
     queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')).order_by('-rating')
+        rating=Avg('reviews__score')
+    ).order_by('-rating')
     serializer_class = serializers.TitleSerializerCreate
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
