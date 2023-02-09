@@ -129,8 +129,6 @@ def signup(request):
         return Response(request.data)
 
     serializer.is_valid(raise_exception=True)
-    user, _ = User.objects.get_or_create(**serializer.validated_data)
-
     confirmation_code = default_token_generator.make_token(user)
     send_confirmation_code(user.email, confirmation_code)
 
@@ -170,8 +168,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     def get_title(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        return title
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_title().reviews.all()
