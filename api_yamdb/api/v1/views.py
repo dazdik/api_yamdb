@@ -129,6 +129,7 @@ def signup(request):
         return Response(request.data)
 
     serializer.is_valid(raise_exception=True)
+    user, _ = User.objects.get_or_create(**serializer.validated_data)
     confirmation_code = default_token_generator.make_token(user)
     send_confirmation_code(user.email, confirmation_code)
 
